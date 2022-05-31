@@ -544,14 +544,20 @@
                                 "group": "root"
                             }
                         },
-                        "services": {
-                            "sysvinit": {
-                                "httpd": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true"
-                                }
+						"commands": {
+                            "01enable_cfn_hup": {
+                                "command": "systemctl enable cfn-hup.service"
+                            },
+                            "02start_cfn_hup": {
+                                "command": "systemctl start cfn-hup.service"
+                            },
+							"03enable_apache2": {
+                                "command": "systemctl enable apache2.service"
+                            },
+                            "04start_apache2": {
+                                "command": "systemctl start apache2.service"
                             }
-                        }
+                        },
                     }
                 },
                 "AWS::CloudFormation::Designer": {
@@ -589,12 +595,12 @@
                             "",
                             [
                                 "#!/bin/bash -xe\n",
-								"apt-get update\n",
-								"apt-get upgrade\n",
-								"apt-get install python3-pip\n",
-								"pip3 install awscli\n",
-								"pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
-                                "apt-get update aws-cfn-bootstrap\n",
+								"apt-get update",
+								"apt-get upgrade -y",
+								"mkdir -p /opt/aws/bin"
+								"apt-get install python3-pip",
+								"app-get install awscli",
+								"pip3 install --target=/opt/aws/bin  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz",
                                 "# Install the files and packages from the metadata\n",
                                 "/opt/aws/bin/cfn-init -v ",
                                 "         --stack ",
