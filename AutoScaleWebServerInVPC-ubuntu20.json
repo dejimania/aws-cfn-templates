@@ -589,7 +589,12 @@
                             "",
                             [
                                 "#!/bin/bash -xe\n",
-                                "apt-get update -y aws-cfn-bootstrap\n",
+								"apt-get update\n",
+								"apt-get upgrade\n",
+								"apt-get install python3-pip\n",
+								"pip3 install awscli\n",
+								"pip3 install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz\n",
+                                "apt-get update aws-cfn-bootstrap\n",
                                 "# Install the files and packages from the metadata\n",
                                 "/opt/aws/bin/cfn-init -v ",
                                 "         --stack ",
