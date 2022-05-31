@@ -520,7 +520,7 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "All": [
-                            "ConfigureSampleApp"
+                            "ConfigureSampleApp", "install_cfn"
                         ]
                     },
                     "ConfigureSampleApp": {
@@ -545,24 +545,95 @@
                             }
                         },
 						"commands": {
+							"01enable_apache2": {
+                                "command": "systemctl enable apache2.service"
+                            },
+                            "02start_apache2": {
+                                "command": "systemctl start apache2.service"
+                            }
+                        }
+                    },
+					"install_cfn": {
+						"files": {
+							"/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackId"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "mode": "000400",
+                                "owner": "root",
+                                "group": "root"
+                            },
+							"/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update ",
+                                            "path=Resources.WebServerLaunchConfig.Metadata.AWS::CloudFormation::Init ",
+                                            "action=/opt/aws/bin/cfn-init -v ",
+                                            "         --stack ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "         --resource WebServerLaunchConfig ",
+                                            "         --configsets All ",
+                                            "         --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n",
+                                            "runas=root "
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/lib/systemd/system/cfn-hup.service": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[Unit]\n",
+                                            "Description=cfn-hup daemon\n\n",
+                                            "[Service]\n",
+                                            "Type=simple ",
+                                            "ExecStart=/opt/aws/bin/cfn-hup ",
+                                            "Restart=always\n\n",
+                                            "[Install]\n",
+                                            "WantedBy=multi-user.target"
+                                        ]
+                                    ]
+                                }
+                            }
+						},
+						"commands": {
                             "01enable_cfn_hup": {
                                 "command": "systemctl enable cfn-hup.service"
                             },
                             "02start_cfn_hup": {
                                 "command": "systemctl start cfn-hup.service"
-                            },
-							"03enable_apache2": {
-                                "command": "systemctl enable apache2.service"
-                            },
-                            "04start_apache2": {
-                                "command": "systemctl start apache2.service"
                             }
-                        },
-                    }
-                },
+						}
+					},
                 "AWS::CloudFormation::Designer": {
                     "id": "0f900c9e-1272-4ec2-8a42-790b074baa39"
                 }
+				}
             },
             "Properties": {
                 "InstanceType": {
@@ -597,7 +668,7 @@
                                 "#!/bin/bash -xe\n",
 								"apt-get update",
 								"apt-get upgrade -y",
-								"mkdir -p /opt/aws/bin"
+								"mkdir -p /opt/aws/bin",
 								"apt-get install python3-pip",
 								"app-get install awscli",
 								"pip3 install --target=/opt/aws/bin  https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz",
@@ -636,7 +707,8 @@
                     }
                 ]
             }
-        }
+			
+		}
     },
     "Outputs": {
         "WebsiteURL": {
