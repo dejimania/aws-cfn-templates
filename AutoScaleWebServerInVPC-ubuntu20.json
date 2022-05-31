@@ -511,6 +511,10 @@
         },
         "WebServerLaunchConfig": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
+			"CreationPolicy": {
+				"ResourceSignal": {
+				  "Timeout": "PT15M"
+			},
             "Metadata": {
                 "AWS::CloudFormation::Init": {
                     "configSets": {
